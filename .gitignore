@@ -1,17 +1,76 @@
+# --------------------
 # Python
+# --------------------
 __pycache__/
-*.pyc
+*.py[codz]
+*$py.class
 
-# Virtual environment
+# C extensions
+*.so
+
+# --------------------
+# Virtual Environments
+# --------------------
 venv/
 .venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# SQLite databases
+# --------------------
+# Databases
+# --------------------
 *.db
 *.sqlite3
+db.sqlite3
+db.sqlite3-journal
 
+# --------------------
 # Environment variables
+# --------------------
 .env
+.envrc
 
+# --------------------
+# Flask
+# --------------------
+instance/
+.webassets-cache
+
+# --------------------
+# Packaging / build
+# --------------------
+build/
+dist/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --------------------
+# Tests / coverage
+# --------------------
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+htmlcov/
+
+# --------------------
 # macOS
+# --------------------
 .DS_Store
+
+# --------------------
+# VS Code (optional but recommended)
+# --------------------
+.vscode/
+
+# --------------------
+# Misc
+# --------------------
+.ipynb_checkpoints
+.mypy_cache/
+.ruff_cache/
