@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Web App</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+  <!-- Top Navbar -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link nav__link--active" href="#">Dashboard</a>
+        <a class="nav__link" href="#">Workouts</a>
+        <a class="nav__link" href="#">Diet</a>
+        <a class="nav__link" href="#">Goals</a>
+        <a class="nav__link" href="#">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <button class="btn btn--ghost">Log In</button>
+        <button class="btn btn--primary">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="container">
+    <!-- Hero / Welcome -->
+    <section class="hero">
+      <div class="hero__left">
+        <h1 class="hero__title">Your all-in-one fitness dashboard</h1>
+        <p class="hero__subtitle">
+          Log workouts, track diet, set goals, and get daily motivational quotes — all in one place.
+        </p>
+
+        <div class="hero__cta">
+          <button class="btn btn--primary">Log a Workout</button>
+          <button class="btn btn--ghost">Set a Goal</button>
+        </div>
+      </div>
+
+      <div class="hero__right">
+        <div class="quote-card">
+          <div class="quote-card__label">Daily Quote</div>
+          <p class="quote-card__text">“Small steps every day lead to big results.”</p>
+          <div class="quote-card__meta">— Placeholder</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Cards -->
+    <section class="grid">
+      <article class="card">
+        <div class="card__icon">🏋️</div>
+        <h2 class="card__title">Workout Tracker</h2>
+        <p class="card__desc">Log exercises, sets, reps, and duration.</p>
+        <button class="btn btn--small">Open</button>
+      </article>
+
+      <article class="card">
+        <div class="card__icon">🥗</div>
+        <h2 class="card__title">Diet Tracker</h2>
+        <p class="card__desc">Track meals, calories, and macros.</p>
+        <button class="btn btn--small">Open</button>
+      </article>
+
+      <article class="card">
+        <div class="card__icon">🎯</div>
+        <h2 class="card__title">Goals</h2>
+        <p class="card__desc">Set targets and monitor your progress.</p>
+        <button class="btn btn--small">Open</button>
+      </article>
+
+      <article class="card">
+        <div class="card__icon">📈</div>
+        <h2 class="card__title">Progress Dashboard</h2>
+        <p class="card__desc">Visualise trends with charts (coming soon).</p>
+        <button class="btn btn--small">Open</button>
+      </article>
+    </section>
+
+    <!-- Placeholder activity section -->
+    <section class="split">
+      <div class="panel">
+        <h3 class="panel__title">Recent Activity</h3>
+        <ul class="list">
+          <li class="list__item">
+            <span class="pill pill--blue">Workout</span>
+            <span>Full body session (placeholder)</span>
+            <span class="muted">Today</span>
+          </li>
+          <li class="list__item">
+            <span class="pill pill--green">Diet</span>
+            <span>Logged breakfast (placeholder)</span>
+            <span class="muted">Yesterday</span>
+          </li>
+          <li class="list__item">
+            <span class="pill pill--amber">Goal</span>
+            <span>New goal created (placeholder)</span>
+            <span class="muted">This week</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel__title">Quick Add</h3>
+        <div class="quick">
+          <button class="quick__btn">+ Workout</button>
+          <button class="quick__btn">+ Meal</button>
+          <button class="quick__btn">+ Goal</button>
+          <button class="quick__btn">+ Quote</button>
+        </div>
+        <p class="panel__hint muted">
+          These buttons will link to forms once features are implemented.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="muted">© {{ 2026 }} Fitness Web App • Prototype UI</div>
+    </footer>
+  </main>
+</body>
+</html>
