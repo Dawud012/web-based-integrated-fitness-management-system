@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fitness Web App</title>
 
+  <!-- Main stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
+
   <!-- Top Navbar -->
   <header class="topbar">
     <div class="container topbar__inner">
@@ -29,15 +31,16 @@
       </nav>
 
       <div class="topbar__actions">
-        <button class="btn btn--ghost">Log In</button>
-        <button class="btn btn--primary">Register</button>
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+
       </div>
     </div>
   </header>
 
-  <!-- Main -->
+  <!-- Main Content -->
   <main class="container">
-    <!-- Hero / Welcome -->
+
+    <!-- Hero Section -->
     <section class="hero">
       <div class="hero__left">
         <h1 class="hero__title">Your all-in-one fitness dashboard</h1>
@@ -91,7 +94,7 @@
       </article>
     </section>
 
-    <!-- Placeholder activity section -->
+    <!-- Activity & Quick Add -->
     <section class="split">
       <div class="panel">
         <h3 class="panel__title">Recent Activity</h3>
@@ -128,9 +131,12 @@
       </div>
     </section>
 
+    <!-- Footer -->
     <footer class="footer">
-      <div class="muted">© {{ 2026 }} Fitness Web App • Prototype UI</div>
+      <div class="muted">© 2026 Fitness Web App • Prototype UI</div>
     </footer>
+
   </main>
+
 </body>
 </html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <main class="container" style="min-height: 100vh; display:flex; align-items:center;">
+    <section class="panel" style="width:100%; max-width:720px; margin:auto;">
+      <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
+        <div class="brand__logo">FW</div>
+        <div>
+          <div class="brand__name" style="font-size:22px;">Fitness Web App</div>
+          <div class="muted">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <h1 class="hero__title" style="margin-top:10px;">Welcome</h1>
+      <p class="hero__subtitle">
+        Log workouts, track diet, set goals, and stay consistent with daily motivation.
+      </p>
+
+      <div class="hero__cta" style="margin-top:18px;">
+        <a class="btn btn--primary" href="{{ url_for('login') }}">Log In</a>
+        <a class="btn btn--ghost" href="{{ url_for('register') }}">Register</a>
+      </div>
+
+      <p class="muted" style="margin-top:18px;">
+        Web-based • Works across devices • No wearable integrations required
+      </p>
+    </section>
+  </main>
+
+</body>
+</html>
