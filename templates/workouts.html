@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workouts • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+  <!-- Top Navbar (only after login) -->
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('workouts') }}">Workouts</a>
+        <a class="nav__link" href="#">Diet</a>
+        <a class="nav__link" href="#">Goals</a>
+        <a class="nav__link" href="#">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 28px;">
+
+    <h1 class="hero__title" style="margin:0 0 8px;">Workout Tracker</h1>
+    <p class="hero__subtitle" style="margin:0 0 14px;">Create workout sessions, then add multiple exercises.</p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="panel" style="margin-bottom: 12px; padding:12px 14px;">
+            <strong style="text-transform:capitalize;">{{ category }}:</strong>
+            <span class="muted">{{ message }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Create Session -->
+    <section class="panel" style="margin-bottom: 14px;">
+      <h3 class="panel__title">Create a workout session</h3>
+
+      <form class="form" method="post" action="{{ url_for('workouts') }}">
+        <label class="field">
+          <span class="field__label">Title (optional)</span>
+          <input class="input" type="text" name="title" placeholder="e.g., Upper Body">
+        </label>
+
+        <label class="field">
+          <span class="field__label">Date</span>
+          <input class="input" type="date" name="workout_date">
+        </label>
+
+        <label class="field">
+          <span class="field__label">Notes (optional)</span>
+          <input class="input" type="text" name="notes" placeholder="e.g., Felt strong today">
+        </label>
+
+        <button class="btn btn--primary btn--full" type="submit">Create Workout</button>
+      </form>
+    </section>
+
+    <!-- Sessions List -->
+    <section class="panel">
+      <h3 class="panel__title">Your workouts</h3>
+
+      {% if workouts|length == 0 %}
+        <p class="muted" style="margin:0;">No workouts yet. Create one above.</p>
+      {% else %}
+        <div class="list" style="gap: 12px;">
+          {% for w in workouts %}
+            <div class="list__item" style="grid-template-columns: auto 1fr auto; align-items:center;">
+              <span class="pill pill--blue">{{ w["workout_date"] }}</span>
+
+              <div>
+                <div style="font-weight:700;">{{ w["title"] }}</div>
+                <div class="muted" style="font-size: 13px;">
+                  {{ w["exercise_count"] }} exercises • {{ w["total_minutes"] }} mins
+                  {% if w["notes"] %} • {{ w["notes"] }}{% endif %}
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px;">
+                <a class="btn btn--small" href="{{ url_for('workout_detail', session_id=w['id']) }}">Open</a>
+                <a class="btn btn--small" href="{{ url_for('edit_workout', session_id=w['id']) }}">Edit</a>
+
+                <form method="post"
+                      action="{{ url_for('delete_workout_session', session_id=w['id']) }}"
+                      onsubmit="return confirm('Delete this workout session? This deletes all exercises too.');">
+                  <button class="btn btn--small" type="submit">Delete</button>
+                </form>
+              </div>
+
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+  </main>
+</body>
+</html>

@@ -53,7 +53,8 @@
         </p>
 
         <div class="hero__cta">
-          <button class="btn btn--primary">Log a Workout</button>
+          <a class="btn btn--primary" href="{{ url_for('workouts') }}">Log a Workout</a>
+
           <button class="btn btn--ghost">Set a Goal</button>
         </div>
       </div>
@@ -73,7 +74,10 @@
         <div class="card__icon">🏋️</div>
         <h2 class="card__title">Workout Tracker</h2>
         <p class="card__desc">Log exercises, sets, reps, and duration.</p>
-        <button class="btn btn--small">Open</button>
+       <a class="btn btn--small" href="{{ url_for('workouts') }}">Open</a>
+       
+
+
       </article>
 
       <article class="card">
@@ -124,7 +128,7 @@
       <div class="panel">
         <h3 class="panel__title">Quick Add</h3>
         <div class="quick">
-          <button class="quick__btn">+ Workout</button>
+          <a class="quick__btn" href="{{ url_for('workouts') }}">+ Workout</a>
           <button class="quick__btn">+ Meal</button>
           <button class="quick__btn">+ Goal</button>
           <button class="quick__btn">+ Quote</button>

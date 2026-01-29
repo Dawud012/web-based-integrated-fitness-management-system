@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ workout["title"] }} • Workouts</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('workouts') }}">Workouts</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 28px;">
+
+    <h1 class="hero__title" style="margin:0 0 6px;">{{ workout["title"] }}</h1>
+    <p class="hero__subtitle" style="margin:0 0 14px;">
+      {{ workout["workout_date"] }}
+      {% if workout["notes"] %} • {{ workout["notes"] }}{% endif %}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="panel" style="margin-bottom: 12px;">
+            <strong>{{ category|capitalize }}:</strong> {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <section class="panel" style="margin-bottom: 14px;">
+      <h3 class="panel__title">Add an exercise</h3>
+
+      <form class="form" method="post" action="{{ url_for('workout_detail', session_id=workout['id']) }}">
+        <label class="field">
+          <span class="field__label">Exercise</span>
+          <input class="input" type="text" name="exercise" placeholder="e.g., Bench Press" required>
+        </label>
+
+        <div class="split" style="padding:0;">
+          <label class="field">
+            <span class="field__label">Sets</span>
+            <input class="input" type="number" name="sets" min="1" required>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Reps</span>
+            <input class="input" type="number" name="reps" min="1" required>
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Duration (minutes)</span>
+          <input class="input" type="number" name="duration_minutes" min="1" required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Notes (optional)</span>
+          <input class="input" type="text" name="notes" placeholder="How did it feel? Any PRs?">
+        </label>
+
+        <button class="btn btn--primary btn--full" type="submit">Add Exercise</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h3 class="panel__title">Exercises</h3>
+
+      {% if exercises|length == 0 %}
+        <p class="muted">No exercises yet. Add one above.</p>
+      {% else %}
+        <div class="list" style="gap: 12px;">
+          {% for ex in exercises %}
+            <div class="list__item" style="grid-template-columns: 1fr auto; align-items:center;">
+              <div>
+                <div style="font-weight:700;">{{ ex["exercise"] }}</div>
+                <div class="muted" style="font-size:13px;">
+                  {{ ex["sets"] }} sets • {{ ex["reps"] }} reps • {{ ex["duration_minutes"] }} mins
+                  {% if ex["notes"] %} • {{ ex["notes"] }}{% endif %}
+                </div>
+              </div>
+
+              <form method="post" action="{{ url_for('delete_exercise', session_id=workout['id'], exercise_id=ex['id']) }}"
+                    onsubmit="return confirm('Delete this exercise?');">
+                <button class="btn btn--small" type="submit">Delete</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+  </main>
+</body>
+</html>

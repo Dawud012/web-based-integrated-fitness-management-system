@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Workout • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <main class="container auth">
+    <section class="auth__card">
+      <h1 class="auth__title">Edit workout</h1>
+      <p class="auth__subtitle">Update title, date, and notes.</p>
+
+      <form class="form" method="post" action="{{ url_for('edit_workout', session_id=workout['id']) }}">
+        <label class="field">
+          <span class="field__label">Title</span>
+          <input class="input" type="text" name="title" value="{{ workout['title'] }}" required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Date</span>
+          <input class="input" type="date" name="workout_date" value="{{ workout['workout_date'] }}" required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Notes</span>
+          <input class="input" type="text" name="notes" value="{{ workout['notes'] or '' }}">
+        </label>
+
+        <button class="btn btn--primary btn--full" type="submit">Save Changes</button>
+      </form>
+
+      <p class="muted" style="margin-top: 14px;">
+        <a class="link" href="{{ url_for('workout_detail', session_id=workout['id']) }}">← Back to workout</a>
+      </p>
+    </section>
+  </main>
+
+</body>
+</html>

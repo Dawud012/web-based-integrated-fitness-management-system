@@ -54,7 +54,7 @@
       <form class="form" method="post" action="{{ url_for('login') }}">
         <label class="field">
           <span class="field__label">Email</span>
-          <input class="input" type="email" name="email" placeholder="you@example.com" required>
+          <input class="input" type="email" name="email" placeholder="you@example.com" value="{{ email }}" required>
         </label>
 
         <label class="field">
