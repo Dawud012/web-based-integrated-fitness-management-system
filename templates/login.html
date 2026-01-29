@@ -9,7 +9,7 @@
 
 <body>
   <!-- Top Navbar -->
-  <header class="topbar">
+ <!-- <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
         <div class="brand__logo">FW</div>
@@ -17,10 +17,10 @@
           <div class="brand__name">Fitness Web App</div>
           <div class="brand__tag">Track • Progress • Stay Motivated</div>
         </div>
-      </div>
+      </div> 
 
       <nav class="nav">
-        <a class="nav__link" href="{{ url_for('home') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('login') }}">Dashboard</a>
         <a class="nav__link" href="#">Workouts</a>
         <a class="nav__link" href="#">Diet</a>
         <a class="nav__link" href="#">Goals</a>
@@ -32,14 +32,26 @@
         <button class="btn btn--primary" type="button">Register</button>
       </div>
     </div>
-  </header>
+  </header> -->
 
   <main class="container auth">
     <section class="auth__card">
       <h1 class="auth__title">Welcome back</h1>
       <p class="auth__subtitle">Log in to access your dashboard.</p>
 
-      <form class="form" method="post" action="#">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="margin-bottom:12px;">
+      {% for category, msg in messages %}
+        <div class="muted" style="padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-bottom:8px;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+      <form class="form" method="post" action="{{ url_for('login') }}">
         <label class="field">
           <span class="field__label">Email</span>
           <input class="input" type="email" name="email" placeholder="you@example.com" required>

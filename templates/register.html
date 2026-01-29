@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<script>
+  function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const toggleBtn = event.currentTarget;
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      toggleBtn.textContent = "🙈";
+    } else {
+      passwordInput.type = "password";
+      toggleBtn.textContent = "👁";
+    }
+  }
+</script>
+
+<body class="auth-page">
+
+  <main class="container auth">
+    <section class="auth__card">
+
+      <!-- Brand -->
+      <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
+        <div class="brand__logo">FW</div>
+        <div>
+          <div class="brand__name" style="font-size:20px;">Fitness Web App</div>
+          <div class="muted">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <h1 class="auth__title">Create your account</h1>
+      <p class="auth__subtitle">
+        Start tracking your fitness and building healthy habits.
+      </p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="margin-bottom:12px;">
+      {% for category, msg in messages %}
+        <div class="muted" style="padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-bottom:8px;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+      <form class="form" method="post">
+
+        <label class="field">
+          <span class="field__label">First name</span>
+          <input class="input" type="text" name="first_name" placeholder="John" value="{{ form.get('first_name','') }}"  required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Last name</span>
+          <input class="input" type="text" name="last_name" placeholder="Doe" value="{{ form.get('last_name','') }}" required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Email</span>
+          <input class="input" type="email" name="email" placeholder="you@example.com" value="{{ form.get('email','') }}" required>
+        </label>
+
+        <label class="field">
+  <span class="field__label">Password</span>
+
+  <div class="password-field">
+    <input
+      class="input"
+      type="password"
+      name="password"
+      id="password"
+      placeholder="••••••••"
+      required
+    >
+    <button
+      type="button"
+      class="password-toggle"
+      onclick="togglePassword()"
+      aria-label="Show password"
+    >
+      👁
+    </button>
+  </div>
+</label>
+
+
+        <button class="btn btn--primary btn--full" type="submit">
+          Create Account
+        </button>
+
+      </form>
+
+      <p class="muted" style="margin-top:14px;">
+        Already have an account?
+        <a class="link" href="{{ url_for('login') }}">Log in</a>
+      </p>
+
+    </section>
+  </main>
+
+</body>
+</html>

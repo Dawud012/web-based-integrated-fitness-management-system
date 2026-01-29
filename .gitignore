@@ -74,3 +74,9 @@ htmlcov/
 .ipynb_checkpoints
 .mypy_cache/
 .ruff_cache/
+
+
+instance/
+*.db
+*.sqlite3
+
