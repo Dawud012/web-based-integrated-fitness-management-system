@@ -5,6 +5,7 @@ import re
 from datetime import date
 import os
 import requests
+import random
 
 
 def password_is_strong(pw: str):
@@ -132,7 +133,21 @@ def logout():
 def dashboard():
     if not session.get("user_id"):
         return redirect(url_for("login"))
-    return render_template("index.html")
+    
+    # Get a random quote for the dashboard
+    conn = get_db()
+    quotes_list = conn.execute("SELECT * FROM quotes").fetchall()
+    conn.close()
+    
+    daily_quote = None
+    if quotes_list:
+        # Use today's date as seed for consistent daily quote
+        today_seed = int(date.today().strftime("%Y%m%d"))
+        random.seed(today_seed)
+        daily_quote = random.choice(quotes_list)
+        random.seed()  # Reset seed
+    
+    return render_template("index.html", daily_quote=daily_quote)
 
 
 # =========================
@@ -344,7 +359,12 @@ def delete_exercise(session_id, exercise_id):
     return redirect(url_for("workout_detail", session_id=session_id))
 
 
+# =========================
+# Diet Tracker
+# =========================
+
 USDA_API_KEY = os.getenv("USDA_API_KEY", "")
+
 
 @app.route("/api/food-search")
 def food_search():
@@ -449,6 +469,7 @@ def diet():
         return redirect(url_for("login"))
     return render_template("diet.html")
 
+
 @app.route("/diet/save", methods=["POST"])
 def diet_save():
     if not session.get("user_id"):
@@ -490,7 +511,128 @@ def diet_save():
     flash("Diet entry saved ✅", "success")
     return redirect(url_for("diet"))
 
+
+@app.route("/diet/history")
+def diet_history():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
+    conn = get_db()
+
+    # Get all entries grouped by date with daily totals
+    daily_totals = conn.execute("""
+        SELECT 
+            entry_date,
+            COUNT(*) as entry_count,
+            ROUND(SUM(calories), 1) as total_calories,
+            ROUND(SUM(protein), 1) as total_protein,
+            ROUND(SUM(carbs), 1) as total_carbs,
+            ROUND(SUM(fat), 1) as total_fat
+        FROM diet_entries
+        WHERE user_id = ?
+        GROUP BY entry_date
+        ORDER BY entry_date DESC
+    """, (user_id,)).fetchall()
+
+    # Get all individual entries (for expandable view)
+    all_entries = conn.execute("""
+        SELECT *
+        FROM diet_entries
+        WHERE user_id = ?
+        ORDER BY entry_date DESC, id DESC
+    """, (user_id,)).fetchall()
+
+    conn.close()
+
+    # Group entries by date for the template
+    entries_by_date = {}
+    for entry in all_entries:
+        date_key = entry["entry_date"]
+        if date_key not in entries_by_date:
+            entries_by_date[date_key] = []
+        entries_by_date[date_key].append(entry)
+
+    return render_template(
+        "diet_history.html",
+        daily_totals=daily_totals,
+        entries_by_date=entries_by_date
+    )
+
+
+@app.route("/diet/delete/<int:entry_id>", methods=["POST"])
+def delete_diet_entry(entry_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM diet_entries WHERE id = ? AND user_id = ?",
+        (entry_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Diet entry deleted.", "success")
+    return redirect(url_for("diet_history"))
+
+
+# =========================
+# Quotes
+# =========================
+
+@app.route("/quotes")
+def quotes():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    all_quotes = conn.execute("SELECT * FROM quotes ORDER BY id DESC").fetchall()
+    conn.close()
+    
+    return render_template("quotes.html", quotes=all_quotes)
+
+
+@app.route("/quotes/add", methods=["POST"])
+def add_quote():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    quote_text = request.form.get("quote_text", "").strip()
+    author = request.form.get("author", "").strip() or "Unknown"
+    
+    if not quote_text:
+        flash("Please enter a quote.", "error")
+        return redirect(url_for("quotes"))
+    
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO quotes (quote_text, author) VALUES (?, ?)",
+        (quote_text, author)
+    )
+    conn.commit()
+    conn.close()
+    
+    flash("Quote added ✅", "success")
+    return redirect(url_for("quotes"))
+
+
+@app.route("/quotes/delete/<int:quote_id>", methods=["POST"])
+def delete_quote(quote_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    conn.execute("DELETE FROM quotes WHERE id = ?", (quote_id,))
+    conn.commit()
+    conn.close()
+    
+    flash("Quote deleted.", "success")
+    return redirect(url_for("quotes"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-
-

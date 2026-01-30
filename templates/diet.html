@@ -52,6 +52,11 @@
       {% endif %}
     {% endwith %}
 
+    <!-- View History Button -->
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <a class="btn btn--ghost" href="{{ url_for('diet_history') }}">📋 View History</a>
+    </div>
+
     <!-- Search -->
     <section class="panel" style="margin-bottom: 14px;">
       <h3 class="panel__title">Search food</h3>

@@ -23,21 +23,18 @@
       </div>
 
       <nav class="nav">
-        <a class="nav__link nav__link--active" href="#">Dashboard</a>
-        <a class="nav__link" href="#">Workouts</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
         <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
-
         <a class="nav__link" href="#">Goals</a>
-        <a class="nav__link" href="#">Quotes</a>
+        <a class="nav__link" href="{{ url_for('quotes') }}">Quotes</a>
       </nav>
 
       <div class="topbar__actions">
         <a class="btn btn--ghost" href="{{ url_for('logout') }}"
-   onclick="return confirm('Are you sure you want to log out?');">
-   Log Out
-</a>
-
-
+           onclick="return confirm('Are you sure you want to log out?');">
+           Log Out
+        </a>
       </div>
     </div>
   </header>
@@ -55,7 +52,6 @@
 
         <div class="hero__cta">
           <a class="btn btn--primary" href="{{ url_for('workouts') }}">Log a Workout</a>
-
           <button class="btn btn--ghost">Set a Goal</button>
         </div>
       </div>
@@ -63,8 +59,13 @@
       <div class="hero__right">
         <div class="quote-card">
           <div class="quote-card__label">Daily Quote</div>
-          <p class="quote-card__text">“Small steps every day lead to big results.”</p>
-          <div class="quote-card__meta">— Placeholder</div>
+          {% if daily_quote %}
+            <p class="quote-card__text">"{{ daily_quote['quote_text'] }}"</p>
+            <div class="quote-card__meta">— {{ daily_quote['author'] or 'Unknown' }}</div>
+          {% else %}
+            <p class="quote-card__text">"Small steps every day lead to big results."</p>
+            <div class="quote-card__meta">— Placeholder</div>
+          {% endif %}
         </div>
       </div>
     </section>
@@ -75,17 +76,14 @@
         <div class="card__icon">🏋️</div>
         <h2 class="card__title">Workout Tracker</h2>
         <p class="card__desc">Log exercises, sets, reps, and duration.</p>
-       <a class="btn btn--small" href="{{ url_for('workouts') }}">Open</a>
-       
-
-
+        <a class="btn btn--small" href="{{ url_for('workouts') }}">Open</a>
       </article>
 
       <article class="card">
         <div class="card__icon">🥗</div>
         <h2 class="card__title">Diet Tracker</h2>
         <p class="card__desc">Track meals, calories, and macros.</p>
-        <button class="btn btn--small">Open</button>
+        <a class="btn btn--small" href="{{ url_for('diet') }}">Open</a>
       </article>
 
       <article class="card">
@@ -130,9 +128,9 @@
         <h3 class="panel__title">Quick Add</h3>
         <div class="quick">
           <a class="quick__btn" href="{{ url_for('workouts') }}">+ Workout</a>
-          <button class="quick__btn">+ Meal</button>
+          <a class="quick__btn" href="{{ url_for('diet') }}">+ Meal</a>
           <button class="quick__btn">+ Goal</button>
-          <button class="quick__btn">+ Quote</button>
+          <a class="quick__btn" href="{{ url_for('quotes') }}">+ Quote</a>
         </div>
         <p class="panel__hint muted">
           These buttons will link to forms once features are implemented.

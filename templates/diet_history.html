@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diet History • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Extra styles for diet history */
+    .day-card {
+      background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .day-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .day-header:hover {
+      background: rgba(255,255,255,.03);
+    }
+
+    .day-date {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .day-summary {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .macro-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .macro-pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+
+    .macro-pill--cal { border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+    .macro-pill--pro { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); }
+    .macro-pill--carb { border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.12); }
+    .macro-pill--fat { border-color: rgba(168,85,247,.35); background: rgba(168,85,247,.12); }
+
+    .day-entries {
+      display: none;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 12px 16px;
+      background: rgba(0,0,0,.15);
+    }
+
+    .day-entries.open {
+      display: block;
+    }
+
+    .entry-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.02);
+      margin-bottom: 8px;
+    }
+
+    .entry-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .entry-name {
+      font-weight: 600;
+    }
+
+    .entry-macros {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .entry-grams {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .toggle-icon {
+      transition: transform 0.2s ease;
+      font-size: 14px;
+    }
+
+    .toggle-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    .totals-overview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 700px) {
+      .totals-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .total-card {
+      background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .total-card__value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .total-card__label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .total-card--cal .total-card__value { color: #f59e0b; }
+    .total-card--pro .total-card__value { color: #22c55e; }
+    .total-card--carb .total-card__value { color: #60a5fa; }
+    .total-card--fat .total-card__value { color: #a855f7; }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('diet') }}">Diet</a>
+        <a class="nav__link" href="#">Goals</a>
+        <a class="nav__link" href="#">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 30px;">
+    <h1 class="hero__title" style="margin:0 0 8px;">Diet History</h1>
+    <p class="hero__subtitle" style="margin:0 0 18px;">
+      View your logged meals and daily macro totals.
+    </p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+          {% for category, msg in messages %}
+            <div class="panel" style="padding:12px 14px;">
+              <strong style="text-transform:capitalize;">{{ category }}:</strong>
+              <span class="muted">{{ msg }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Navigation buttons -->
+    <div style="display:flex; gap:10px; margin-bottom:18px;">
+      <a class="btn btn--primary" href="{{ url_for('diet') }}">+ Add Entry</a>
+      <a class="btn btn--ghost" href="{{ url_for('diet_history') }}">Refresh</a>
+    </div>
+
+    {% if daily_totals|length == 0 %}
+      <div class="panel">
+        <p class="muted" style="margin:0;">No diet entries yet. Start logging your meals!</p>
+      </div>
+    {% else %}
+
+      <!-- Today's totals (if today has entries) -->
+      {% set today = daily_totals[0] if daily_totals|length > 0 else None %}
+      {% if today %}
+        <h3 style="margin:0 0 12px; font-size:14px; color:var(--muted);">
+          LATEST DAY: {{ today['entry_date'] }}
+        </h3>
+        <div class="totals-overview">
+          <div class="total-card total-card--cal">
+            <div class="total-card__value">{{ today['total_calories'] or 0 }}</div>
+            <div class="total-card__label">Calories</div>
+          </div>
+          <div class="total-card total-card--pro">
+            <div class="total-card__value">{{ today['total_protein'] or 0 }}g</div>
+            <div class="total-card__label">Protein</div>
+          </div>
+          <div class="total-card total-card--carb">
+            <div class="total-card__value">{{ today['total_carbs'] or 0 }}g</div>
+            <div class="total-card__label">Carbs</div>
+          </div>
+          <div class="total-card total-card--fat">
+            <div class="total-card__value">{{ today['total_fat'] or 0 }}g</div>
+            <div class="total-card__label">Fat</div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h3 style="margin:0 0 12px; font-size:14px; color:var(--muted);">ALL DAYS</h3>
+
+      {% for day in daily_totals %}
+        <div class="day-card">
+          <div class="day-header" onclick="toggleDay('{{ day['entry_date'] }}')">
+            <div>
+              <div class="day-date">{{ day['entry_date'] }}</div>
+              <div class="day-summary">{{ day['entry_count'] }} item{% if day['entry_count'] != 1 %}s{% endif %} logged</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="macro-pills">
+                <span class="macro-pill macro-pill--cal">{{ day['total_calories'] or 0 }} cal</span>
+                <span class="macro-pill macro-pill--pro">{{ day['total_protein'] or 0 }}g P</span>
+                <span class="macro-pill macro-pill--carb">{{ day['total_carbs'] or 0 }}g C</span>
+                <span class="macro-pill macro-pill--fat">{{ day['total_fat'] or 0 }}g F</span>
+              </div>
+              <span class="toggle-icon" id="icon-{{ day['entry_date'] }}">▼</span>
+            </div>
+          </div>
+
+          <div class="day-entries" id="entries-{{ day['entry_date'] }}">
+            {% for entry in entries_by_date.get(day['entry_date'], []) %}
+              <div class="entry-item">
+                <div>
+                  <div class="entry-name">{{ entry['food_name'] }}</div>
+                  <div class="entry-macros">
+                    {{ entry['calories'] or 0 }} cal •
+                    {{ entry['protein'] or 0 }}g protein •
+                    {{ entry['carbs'] or 0 }}g carbs •
+                    {{ entry['fat'] or 0 }}g fat
+                  </div>
+                </div>
+                <div class="entry-grams">{{ entry['grams'] }}g</div>
+                <form method="post" action="{{ url_for('delete_diet_entry', entry_id=entry['id']) }}"
+                      onsubmit="return confirm('Delete this entry?');">
+                  <button class="btn btn--small" type="submit">Delete</button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+    {% endif %}
+
+  </main>
+
+  <script>
+    function toggleDay(date) {
+      const entries = document.getElementById('entries-' + date);
+      const icon = document.getElementById('icon-' + date);
+
+      if (entries.classList.contains('open')) {
+        entries.classList.remove('open');
+        icon.classList.remove('rotated');
+      } else {
+        entries.classList.add('open');
+        icon.classList.add('rotated');
+      }
+    }
+  </script>
+
+</body>
+</html>
