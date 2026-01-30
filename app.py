@@ -3,6 +3,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models.db import get_db, init_db
 import re
 from datetime import date
+import os
+import requests
 
 
 def password_is_strong(pw: str):
@@ -342,5 +344,153 @@ def delete_exercise(session_id, exercise_id):
     return redirect(url_for("workout_detail", session_id=session_id))
 
 
+USDA_API_KEY = os.getenv("USDA_API_KEY", "")
+
+@app.route("/api/food-search")
+def food_search():
+    if not session.get("user_id"):
+        return {"error": "Unauthorized"}, 401
+
+    q = request.args.get("q", "").strip()
+    if not q:
+        return {"foods": []}
+
+    if not USDA_API_KEY:
+        return {"error": "Missing USDA_API_KEY env var"}, 500
+
+    url = "https://api.nal.usda.gov/fdc/v1/foods/search"
+    params = {
+        "api_key": USDA_API_KEY,
+        "query": q,
+        "pageSize": 8,
+    }
+
+    r = requests.get(url, params=params, timeout=10)
+    r.raise_for_status()
+    data = r.json()
+
+    foods = []
+    for item in data.get("foods", []):
+        foods.append({
+            "fdcId": item.get("fdcId"),
+            "description": item.get("description", ""),
+            "brandName": item.get("brandName", ""),
+            "foodCategory": item.get("foodCategory", ""),
+        })
+
+    return {"foods": foods}
+
+
+def _pick_nutrients(food_json: dict):
+    """
+    Returns calories/protein/carbs/fat per 100g if available.
+    USDA provides nutrients in multiple ways depending on the item.
+    This tries to map common nutrients from foodNutrients.
+    """
+    calories = protein = carbs = fat = None
+
+    # foodNutrients is a list of objects with nutrient info
+    for fn in food_json.get("foodNutrients", []):
+        nut = fn.get("nutrient", {}) or {}
+        name = (nut.get("name") or "").lower()
+
+        # amount is usually per 100g for many items
+        amt = fn.get("amount", None)
+
+        if amt is None:
+            continue
+
+        if "energy" in name and calories is None:
+            calories = amt
+        elif "protein" in name and protein is None:
+            protein = amt
+        elif ("carbohydrate" in name or "carbs" in name) and carbs is None:
+            carbs = amt
+        elif "total lipid" in name or "fat" in name:
+            if fat is None:
+                fat = amt
+
+    return {
+        "calories": calories,
+        "protein": protein,
+        "carbs": carbs,
+        "fat": fat,
+    }
+
+
+@app.route("/api/food-detail/<int:fdc_id>")
+def food_detail(fdc_id):
+    if not session.get("user_id"):
+        return {"error": "Unauthorized"}, 401
+
+    if not USDA_API_KEY:
+        return {"error": "Missing USDA_API_KEY env var"}, 500
+
+    url = f"https://api.nal.usda.gov/fdc/v1/food/{fdc_id}"
+    params = {"api_key": USDA_API_KEY}
+
+    r = requests.get(url, params=params, timeout=10)
+    r.raise_for_status()
+    food = r.json()
+
+    nutrients = _pick_nutrients(food)
+
+    return {
+        "fdcId": fdc_id,
+        "description": food.get("description", ""),
+        "brandOwner": food.get("brandOwner", ""),
+        "nutrients_per_100g": nutrients
+    }
+
+
+@app.route("/diet")
+def diet():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    return render_template("diet.html")
+
+@app.route("/diet/save", methods=["POST"])
+def diet_save():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
+    entry_date = request.form.get("entry_date", "").strip()
+    food_name = request.form.get("food_name", "").strip()
+    grams = request.form.get("grams", "").strip()
+    calories = request.form.get("calories", "").strip()
+    protein = request.form.get("protein", "").strip()
+    carbs = request.form.get("carbs", "").strip()
+    fat = request.form.get("fat", "").strip()
+
+    # basic validation
+    if not entry_date or not food_name or not grams:
+        flash("Please select a food and fill date + grams.", "error")
+        return redirect(url_for("diet"))
+
+    try:
+        grams = float(grams)
+        calories = float(calories) if calories else None
+        protein = float(protein) if protein else None
+        carbs = float(carbs) if carbs else None
+        fat = float(fat) if fat else None
+    except ValueError:
+        flash("Numbers invalid (grams/macros).", "error")
+        return redirect(url_for("diet"))
+
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO diet_entries (user_id, entry_date, food_name, grams, calories, protein, carbs, fat)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, entry_date, food_name, grams, calories, protein, carbs, fat))
+    conn.commit()
+    conn.close()
+
+    flash("Diet entry saved ✅", "success")
+    return redirect(url_for("diet"))
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diet Tracker • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('diet') }}">Diet</a>
+        <a class="nav__link" href="#">Goals</a>
+        <a class="nav__link" href="#">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 30px;">
+    <h1 class="hero__title" style="margin:0 0 8px;">Diet Tracker</h1>
+    <p class="hero__subtitle" style="margin:0 0 14px;">
+      Search foods (USDA database) and auto-fill calories/macros.
+    </p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+          {% for category, msg in messages %}
+            <div class="panel" style="padding:12px 14px;">
+              <strong style="text-transform:capitalize;">{{ category }}:</strong>
+              <span class="muted">{{ msg }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Search -->
+    <section class="panel" style="margin-bottom: 14px;">
+      <h3 class="panel__title">Search food</h3>
+
+      <label class="field">
+        <span class="field__label">Search</span>
+        <input class="input" id="foodQuery" type="text" placeholder="e.g., chicken breast, oats, banana" autocomplete="off">
+      </label>
+
+      <div id="results" class="list" style="margin-top: 12px; display:none;"></div>
+
+      <p id="searchHint" class="muted" style="margin-top: 10px;">
+        Type to search. Click a result to fill macros.
+      </p>
+    </section>
+
+    <!-- Add Entry -->
+    <section class="panel">
+      <h3 class="panel__title">Add entry</h3>
+
+      <form class="form" method="post" action="{{ url_for('diet_save') }}">
+
+        <label class="field">
+          <span class="field__label">Food name *</span>
+          <input class="input" id="foodName" name="food_name" type="text" placeholder="Select from search..." readonly required>
+        </label>
+
+        <div class="split" style="grid-template-columns: 1fr 1fr; padding:0;">
+          <label class="field">
+            <span class="field__label">Date *</span>
+            <input class="input" id="entryDate" name="entry_date" type="date" required>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Grams *</span>
+            <input class="input" id="grams" name="grams" type="number" min="1" value="100" required>
+          </label>
+        </div>
+
+        <div class="split" style="grid-template-columns: 1fr 1fr; padding:0;">
+          <label class="field">
+            <span class="field__label">Calories</span>
+            <input class="input" id="calories" name="calories" type="number" step="0.1" readonly>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Protein (g)</span>
+            <input class="input" id="protein" name="protein" type="number" step="0.1" readonly>
+          </label>
+        </div>
+
+        <div class="split" style="grid-template-columns: 1fr 1fr; padding:0;">
+          <label class="field">
+            <span class="field__label">Carbs (g)</span>
+            <input class="input" id="carbs" name="carbs" type="number" step="0.1" readonly>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Fat (g)</span>
+            <input class="input" id="fat" name="fat" type="number" step="0.1" readonly>
+          </label>
+        </div>
+
+        <p class="muted" style="margin:0;">
+          Values are calculated from USDA macros per 100g (when available).
+        </p>
+
+        <button class="btn btn--primary btn--full" type="submit">
+          Save Entry
+        </button>
+
+      </form>
+    </section>
+  </main>
+
+<script>
+  const foodQuery = document.getElementById("foodQuery");
+  const resultsEl = document.getElementById("results");
+  const searchHint = document.getElementById("searchHint");
+
+  const foodName = document.getElementById("foodName");
+  const entryDate = document.getElementById("entryDate");
+  const gramsEl = document.getElementById("grams");
+
+  const caloriesEl = document.getElementById("calories");
+  const proteinEl = document.getElementById("protein");
+  const carbsEl = document.getElementById("carbs");
+  const fatEl = document.getElementById("fat");
+
+  // default date = today
+  if (!entryDate.value) {
+    const today = new Date().toISOString().slice(0,10);
+    entryDate.value = today;
+  }
+
+  let basePer100 = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+  function round1(x) {
+    if (x === null || x === undefined || isNaN(x)) return "";
+    return Math.round(x * 10) / 10;
+  }
+
+  function safeNum(x) {
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function recalcTotals() {
+    const grams = parseFloat(gramsEl.value || "0");
+    const factor = grams / 100.0;
+
+    caloriesEl.value = round1(safeNum(basePer100.calories) * factor);
+    proteinEl.value  = round1(safeNum(basePer100.protein)  * factor);
+    carbsEl.value    = round1(safeNum(basePer100.carbs)    * factor);
+    fatEl.value      = round1(safeNum(basePer100.fat)      * factor);
+  }
+
+  gramsEl.addEventListener("input", recalcTotals);
+
+  let timer = null;
+
+  foodQuery.addEventListener("input", () => {
+    clearTimeout(timer);
+    const q = foodQuery.value.trim();
+
+    if (q.length < 2) {
+      resultsEl.style.display = "none";
+      resultsEl.innerHTML = "";
+      searchHint.textContent = "Type to search. Click a result to fill macros.";
+      return;
+    }
+
+    timer = setTimeout(async () => {
+      try {
+        searchHint.textContent = "Searching...";
+        const res = await fetch(`/api/food-search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        const foods = data.foods || [];
+        resultsEl.innerHTML = "";
+
+        if (!foods.length) {
+          resultsEl.style.display = "none";
+          searchHint.textContent = "No results found.";
+          return;
+        }
+
+        resultsEl.style.display = "flex";
+        resultsEl.style.flexDirection = "column";
+        resultsEl.style.gap = "10px";
+
+        foods.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "list__item";
+          div.style.gridTemplateColumns = "1fr auto";
+          div.style.cursor = "pointer";
+
+          const brand = item.brandName ? (item.brandName + " • ") : "";
+          const cat = item.foodCategory ? item.foodCategory : "";
+
+          div.innerHTML = `
+            <div>
+              <div style="font-weight:700;">${item.description}</div>
+              <div class="muted" style="font-size:13px;">${brand}${cat}</div>
+            </div>
+            <span class="pill pill--blue">Select</span>
+          `;
+
+          div.onclick = async () => {
+            try {
+              searchHint.textContent = "Loading nutrition...";
+              const detailRes = await fetch(`/api/food-detail/${item.fdcId}`);
+              const detail = await detailRes.json();
+
+              foodName.value = detail.description || item.description;
+
+              const n = detail.nutrients_per_100g || {};
+              basePer100 = {
+                calories: n.calories,
+                protein: n.protein,
+                carbs: n.carbs,
+                fat: n.fat
+              };
+
+              gramsEl.value = 100;
+              recalcTotals();
+
+              resultsEl.style.display = "none";
+              resultsEl.innerHTML = "";
+              searchHint.textContent = "Selected. Adjust grams to recalculate totals.";
+            } catch (e) {
+              console.error(e);
+              searchHint.textContent = "Could not load nutrition for that item.";
+            }
+          };
+
+          resultsEl.appendChild(div);
+        });
+
+        searchHint.textContent = "Click a result to fill macros.";
+      } catch (e) {
+        console.error(e);
+        searchHint.textContent = "Error searching foods (check server logs).";
+      }
+    }, 350);
+  });
+</script>
+
+</body>
+</html>

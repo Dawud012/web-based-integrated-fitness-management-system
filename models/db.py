@@ -13,7 +13,6 @@ def get_db():
 def init_db():
     conn = get_db()
 
-    # Users table
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,12 +24,11 @@ def init_db():
         )
     """)
 
-    # Workout sessions table (ONE row per workout session)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS workout_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            title TEXT NOT NULL DEFAULT 'Workout',
+            title TEXT NOT NULL,
             workout_date TEXT NOT NULL,
             notes TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +36,6 @@ def init_db():
         )
     """)
 
-    # Exercises table (MANY rows per session)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS workout_exercises (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,6 +47,23 @@ def init_db():
             notes TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (session_id) REFERENCES workout_sessions(id)
+        )
+    """)
+
+    # ✅ NEW: Diet entries table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS diet_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            entry_date TEXT NOT NULL,
+            food_name TEXT NOT NULL,
+            grams REAL NOT NULL,
+            calories REAL,
+            protein REAL,
+            carbs REAL,
+            fat REAL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
 
