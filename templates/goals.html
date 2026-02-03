@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goals • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .goal-card {
+      background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .goal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .goal-meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .goal-type {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .goal-type--fitness { background: rgba(96,165,250,.15); color: #60a5fa; border: 1px solid rgba(96,165,250,.3); }
+    .goal-type--nutrition { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .goal-type--weight { background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
+    .goal-type--habit { background: rgba(168,85,247,.15); color: #a855f7; border: 1px solid rgba(168,85,247,.3); }
+    .goal-type--other { background: rgba(255,255,255,.1); color: var(--muted); border: 1px solid rgba(255,255,255,.15); }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6aa7ff, #22c55e);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .goal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .update-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .update-form input {
+      width: 100px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .completed-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .goal-card--completed {
+      opacity: 0.7;
+    }
+
+    .goal-card--completed .progress-bar__fill {
+      background: #22c55e;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state__icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
+        <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
+        <a class="nav__link nav__link--active" href="{{ url_for('goals') }}">Goals</a>
+        <a class="nav__link" href="{{ url_for('quotes') }}">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 30px;">
+    <h1 class="hero__title" style="margin:0 0 8px;">Goals</h1>
+    <p class="hero__subtitle" style="margin:0 0 18px;">
+      Set targets and track your progress towards a healthier you.
+    </p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+          {% for category, msg in messages %}
+            <div class="panel" style="padding:12px 14px;">
+              <strong style="text-transform:capitalize;">{{ category }}:</strong>
+              <span class="muted">{{ msg }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Add New Goal -->
+    <section class="panel" style="margin-bottom: 20px;">
+      <h3 class="panel__title">Create a new goal</h3>
+
+      <form class="form" method="post" action="{{ url_for('add_goal') }}">
+        <div class="split" style="grid-template-columns: 1fr 1fr; padding:0;">
+          <label class="field">
+            <span class="field__label">Goal type</span>
+            <select class="input" name="goal_type" required>
+              <option value="fitness">💪 Fitness</option>
+              <option value="nutrition">🥗 Nutrition</option>
+              <option value="weight">⚖️ Weight</option>
+              <option value="habit">✅ Habit</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Target date (optional)</span>
+            <input class="input" type="date" name="target_date">
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Goal title *</span>
+          <input class="input" type="text" name="title" placeholder="e.g., Run 5km, Lose 5kg, Drink 2L water daily" required>
+        </label>
+
+        <div class="split" style="grid-template-columns: 1fr 1fr; padding:0;">
+          <label class="field">
+            <span class="field__label">Target value (optional)</span>
+            <input class="input" type="number" name="target_value" step="0.1" placeholder="e.g., 5">
+          </label>
+
+          <label class="field">
+            <span class="field__label">Unit (optional)</span>
+            <input class="input" type="text" name="unit" placeholder="e.g., km, kg, litres, days">
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Notes (optional)</span>
+          <input class="input" type="text" name="notes" placeholder="Any additional details...">
+        </label>
+
+        <button class="btn btn--primary" type="submit">Create Goal</button>
+      </form>
+    </section>
+
+    <!-- Active Goals -->
+    <section>
+      <h3 style="margin:0 0 14px;">🎯 Active Goals ({{ active_goals|length }})</h3>
+
+      {% if active_goals|length == 0 %}
+        <div class="panel empty-state">
+          <div class="empty-state__icon">🎯</div>
+          <p>No active goals yet. Create one above to get started!</p>
+        </div>
+      {% else %}
+        {% for goal in active_goals %}
+          <div class="goal-card">
+            <div class="goal-header">
+              <div>
+                <h4 class="goal-title">{{ goal['title'] }}</h4>
+                <div class="goal-meta">
+                  {% if goal['target_date'] %}Due: {{ goal['target_date'] }} • {% endif %}
+                  Created: {{ goal['created_at'][:10] }}
+                  {% if goal['notes'] %} • {{ goal['notes'] }}{% endif %}
+                </div>
+              </div>
+              <span class="goal-type goal-type--{{ goal['goal_type'] }}">{{ goal['goal_type'] }}</span>
+            </div>
+
+            {% if goal['target_value'] %}
+              {% set progress = (goal['current_value'] / goal['target_value'] * 100) if goal['target_value'] > 0 else 0 %}
+              {% set progress = progress if progress <= 100 else 100 %}
+              
+              <div class="progress-bar">
+                <div class="progress-bar__fill" style="width: {{ progress }}%;"></div>
+              </div>
+              <div class="progress-text">
+                <span>{{ goal['current_value'] or 0 }} {{ goal['unit'] or '' }}</span>
+                <span>{{ goal['target_value'] }} {{ goal['unit'] or '' }} ({{ progress|round(1) }}%)</span>
+              </div>
+            {% endif %}
+
+            <div class="goal-actions">
+              {% if goal['target_value'] %}
+                <form class="update-form" method="post" action="{{ url_for('update_goal_progress', goal_id=goal['id']) }}">
+                  <input type="number" name="current_value" step="0.1" value="{{ goal['current_value'] or 0 }}" placeholder="Progress">
+                  <button class="btn btn--small" type="submit">Update</button>
+                </form>
+              {% endif %}
+
+              <form method="post" action="{{ url_for('complete_goal', goal_id=goal['id']) }}">
+                <button class="btn btn--small" type="submit">✓ Complete</button>
+              </form>
+
+              <form method="post" action="{{ url_for('delete_goal', goal_id=goal['id']) }}"
+                    onsubmit="return confirm('Delete this goal?');">
+                <button class="btn btn--small" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </section>
+
+    <!-- Completed Goals -->
+    {% if completed_goals|length > 0 %}
+      <section class="completed-section">
+        <h3 style="margin:0 0 14px;">✅ Completed Goals ({{ completed_goals|length }})</h3>
+
+        {% for goal in completed_goals %}
+          <div class="goal-card goal-card--completed">
+            <div class="goal-header">
+              <div>
+                <h4 class="goal-title">{{ goal['title'] }}</h4>
+                <div class="goal-meta">
+                  Completed • Created: {{ goal['created_at'][:10] }}
+                </div>
+              </div>
+              <span class="goal-type goal-type--{{ goal['goal_type'] }}">{{ goal['goal_type'] }}</span>
+            </div>
+
+            {% if goal['target_value'] %}
+              <div class="progress-bar">
+                <div class="progress-bar__fill" style="width: 100%;"></div>
+              </div>
+              <div class="progress-text">
+                <span>{{ goal['current_value'] or goal['target_value'] }} {{ goal['unit'] or '' }}</span>
+                <span>{{ goal['target_value'] }} {{ goal['unit'] or '' }} (100%)</span>
+              </div>
+            {% endif %}
+
+            <div class="goal-actions">
+              <form method="post" action="{{ url_for('reactivate_goal', goal_id=goal['id']) }}">
+                <button class="btn btn--small" type="submit">↩ Reactivate</button>
+              </form>
+
+              <form method="post" action="{{ url_for('delete_goal', goal_id=goal['id']) }}"
+                    onsubmit="return confirm('Delete this goal?');">
+                <button class="btn btn--small" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+  </main>
+
+</body>
+</html>

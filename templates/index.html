@@ -26,7 +26,7 @@
         <a class="nav__link nav__link--active" href="{{ url_for('dashboard') }}">Dashboard</a>
         <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
         <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
-        <a class="nav__link" href="#">Goals</a>
+        <a class="nav__link" href="{{ url_for('goals') }}">Goals</a>
         <a class="nav__link" href="{{ url_for('quotes') }}">Quotes</a>
       </nav>
 
@@ -52,7 +52,7 @@
 
         <div class="hero__cta">
           <a class="btn btn--primary" href="{{ url_for('workouts') }}">Log a Workout</a>
-          <button class="btn btn--ghost">Set a Goal</button>
+          <a class="btn btn--ghost" href="{{ url_for('goals') }}">Set a Goal</a>
         </div>
       </div>
 
@@ -90,7 +90,7 @@
         <div class="card__icon">🎯</div>
         <h2 class="card__title">Goals</h2>
         <p class="card__desc">Set targets and monitor your progress.</p>
-        <button class="btn btn--small">Open</button>
+        <a class="btn btn--small" href="{{ url_for('goals') }}">Open</a>
       </article>
 
       <article class="card">
@@ -129,12 +129,10 @@
         <div class="quick">
           <a class="quick__btn" href="{{ url_for('workouts') }}">+ Workout</a>
           <a class="quick__btn" href="{{ url_for('diet') }}">+ Meal</a>
-          <button class="quick__btn">+ Goal</button>
+          <a class="quick__btn" href="{{ url_for('goals') }}">+ Goal</a>
           <a class="quick__btn" href="{{ url_for('quotes') }}">+ Quote</a>
         </div>
-        <p class="panel__hint muted">
-          These buttons will link to forms once features are implemented.
-        </p>
+      
       </div>
     </section>
 

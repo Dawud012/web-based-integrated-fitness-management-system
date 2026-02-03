@@ -8,31 +8,7 @@
 </head>
 
 <body>
-  <!-- Top Navbar -->
- <!-- <header class="topbar">
-    <div class="container topbar__inner">
-      <div class="brand">
-        <div class="brand__logo">FW</div>
-        <div class="brand__text">
-          <div class="brand__name">Fitness Web App</div>
-          <div class="brand__tag">Track • Progress • Stay Motivated</div>
-        </div>
-      </div> 
-
-      <nav class="nav">
-        <a class="nav__link" href="{{ url_for('login') }}">Dashboard</a>
-        <a class="nav__link" href="#">Workouts</a>
-        <a class="nav__link" href="#">Diet</a>
-        <a class="nav__link" href="#">Goals</a>
-        <a class="nav__link" href="#">Quotes</a>
-      </nav>
-
-      <div class="topbar__actions">
-        <a class="btn btn--ghost btn--active" href="{{ url_for('login') }}">Log In</a>
-        <button class="btn btn--primary" type="button">Register</button>
-      </div>
-    </div>
-  </header> -->
+  
 
   <main class="container auth">
     <section class="auth__card">
@@ -68,15 +44,15 @@
             <span>Remember me</span>
           </label>
 
-          <a class="link" href="#">Forgot password?</a>
+          <a class="link" href="{{ url_for('forgot_password') }}">Forgot password?</a>
         </div>
 
         <button class="btn btn--primary btn--full" type="submit">Log In</button>
       </form>
 
       <p class="auth__bottom muted">
-        Don’t have an account? <a class="link" href="#">Create one</a>
-      </p>
+  Don't have an account? <a class="link" href="{{ url_for('register') }}">Create one</a>
+</p>
     </section>
   </main>
 </body>

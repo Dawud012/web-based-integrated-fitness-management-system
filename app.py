@@ -6,6 +6,12 @@ from datetime import date
 import os
 import requests
 import random
+from flask_mail import Mail, Message
+import secrets
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+load_dotenv()
+
 
 
 def password_is_strong(pw: str):
@@ -24,6 +30,16 @@ def password_is_strong(pw: str):
 
 app = Flask(__name__)
 app.secret_key = "dev-key-change-later"  # later move to .env
+
+# Email configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')  # Gmail address
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')  # Gmail App Password
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME', '')
+
+mail = Mail(app)
 
 # Create tables when app starts
 with app.app_context():
@@ -632,6 +648,323 @@ def delete_quote(quote_id):
     
     flash("Quote deleted.", "success")
     return redirect(url_for("quotes"))
+
+    # =========================
+# Goals
+# =========================
+
+@app.route("/goals")
+def goals():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    
+    conn = get_db()
+    
+    # Get active goals
+    active_goals = conn.execute("""
+        SELECT * FROM goals 
+        WHERE user_id = ? AND status = 'active'
+        ORDER BY created_at DESC
+    """, (user_id,)).fetchall()
+    
+    # Get completed goals
+    completed_goals = conn.execute("""
+        SELECT * FROM goals 
+        WHERE user_id = ? AND status = 'completed'
+        ORDER BY created_at DESC
+    """, (user_id,)).fetchall()
+    
+    conn.close()
+    
+    return render_template("goals.html", active_goals=active_goals, completed_goals=completed_goals)
+
+
+@app.route("/goals/add", methods=["POST"])
+def add_goal():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    
+    goal_type = request.form.get("goal_type", "").strip()
+    title = request.form.get("title", "").strip()
+    target_value = request.form.get("target_value", "").strip()
+    unit = request.form.get("unit", "").strip()
+    target_date = request.form.get("target_date", "").strip()
+    notes = request.form.get("notes", "").strip()
+    
+    if not title:
+        flash("Please enter a goal title.", "error")
+        return redirect(url_for("goals"))
+    
+    try:
+        target_value = float(target_value) if target_value else None
+    except ValueError:
+        flash("Target value must be a number.", "error")
+        return redirect(url_for("goals"))
+    
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO goals (user_id, goal_type, title, target_value, unit, target_date, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, goal_type, title, target_value, unit, target_date or None, notes))
+    conn.commit()
+    conn.close()
+    
+    flash("Goal created ✅", "success")
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/update", methods=["POST"])
+def update_goal_progress(goal_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    current_value = request.form.get("current_value", "").strip()
+    
+    try:
+        current_value = float(current_value) if current_value else 0
+    except ValueError:
+        flash("Progress value must be a number.", "error")
+        return redirect(url_for("goals"))
+    
+    conn = get_db()
+    
+    # Get the goal to check if completed
+    goal = conn.execute(
+        "SELECT * FROM goals WHERE id = ? AND user_id = ?",
+        (goal_id, user_id)
+    ).fetchone()
+    
+    if not goal:
+        conn.close()
+        flash("Goal not found.", "error")
+        return redirect(url_for("goals"))
+    
+    # Check if goal is now completed
+    status = "active"
+    if goal["target_value"] and current_value >= goal["target_value"]:
+        status = "completed"
+    
+    conn.execute("""
+        UPDATE goals 
+        SET current_value = ?, status = ?
+        WHERE id = ? AND user_id = ?
+    """, (current_value, status, goal_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    if status == "completed":
+        flash("🎉 Congratulations! Goal completed!", "success")
+    else:
+        flash("Progress updated ✅", "success")
+    
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/complete", methods=["POST"])
+def complete_goal(goal_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    
+    conn = get_db()
+    conn.execute("""
+        UPDATE goals 
+        SET status = 'completed'
+        WHERE id = ? AND user_id = ?
+    """, (goal_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    flash("🎉 Goal marked as complete!", "success")
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/reactivate", methods=["POST"])
+def reactivate_goal(goal_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    
+    conn = get_db()
+    conn.execute("""
+        UPDATE goals 
+        SET status = 'active'
+        WHERE id = ? AND user_id = ?
+    """, (goal_id, user_id))
+    conn.commit()
+    conn.close()
+    
+    flash("Goal reactivated ✅", "success")
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/delete", methods=["POST"])
+def delete_goal(goal_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM goals WHERE id = ? AND user_id = ?",
+        (goal_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    flash("Goal deleted.", "success")
+    return redirect(url_for("goals"))
+
+
+# =========================
+# Forgot Password (Email-based)
+# =========================
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        
+        if not email:
+            flash("Please enter your email address.", "error")
+            return render_template("forgot_password.html", email="")
+        
+        conn = get_db()
+        user = conn.execute(
+            "SELECT id, first_name FROM users WHERE email = ?",
+            (email,)
+        ).fetchone()
+        
+        if user:
+            # Generate secure token
+            token = secrets.token_urlsafe(32)
+            expires_at = (datetime.now() + timedelta(hours=1)).isoformat()
+            
+            # Delete any existing tokens for this user
+            conn.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user["id"],))
+            
+            # Save new token
+            conn.execute("""
+                INSERT INTO password_reset_tokens (user_id, token, expires_at)
+                VALUES (?, ?, ?)
+            """, (user["id"], token, expires_at))
+            conn.commit()
+            
+            # Create reset link
+            reset_link = url_for('reset_password_token', token=token, _external=True)
+            
+            # Send email
+            try:
+                msg = Message(
+                    subject="Reset Your Password - Fitness Web App",
+                    recipients=[email]
+                )
+                msg.html = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #6aa7ff;">Fitness Web App</h2>
+                    <p>Hi {user['first_name']},</p>
+                    <p>We received a request to reset your password. Click the button below to create a new password:</p>
+                    <p style="margin: 25px 0;">
+                        <a href="{reset_link}" 
+                           style="background: linear-gradient(135deg, #6aa7ff, #3b82f6); 
+                                  color: #fff; 
+                                  padding: 12px 24px; 
+                                  text-decoration: none; 
+                                  border-radius: 8px;
+                                  display: inline-block;">
+                            Reset Password
+                        </a>
+                    </p>
+                    <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
+                    <p style="color: #666; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="color: #999; font-size: 12px;">Fitness Web App • Track • Progress • Stay Motivated</p>
+                </div>
+                """
+                mail.send(msg)
+                flash("Password reset link sent! Check your email.", "success")
+            except Exception as e:
+                print(f"Email error: {e}")
+                flash("Could not send email. Please try again later.", "error")
+        else:
+            # Don't reveal if email exists or not (security)
+            flash("If an account exists with that email, a reset link has been sent.", "success")
+        
+        conn.close()
+        return render_template("forgot_password.html", email="")
+    
+    return render_template("forgot_password.html", email="")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password_token(token):
+    conn = get_db()
+    
+    # Find valid token
+    reset_request = conn.execute("""
+        SELECT prt.*, u.email 
+        FROM password_reset_tokens prt
+        JOIN users u ON u.id = prt.user_id
+        WHERE prt.token = ? AND prt.used = 0
+    """, (token,)).fetchone()
+    
+    if not reset_request:
+        conn.close()
+        flash("Invalid or expired reset link. Please request a new one.", "error")
+        return redirect(url_for("forgot_password"))
+    
+    # Check if expired
+    expires_at = datetime.fromisoformat(reset_request["expires_at"])
+    if datetime.now() > expires_at:
+        conn.close()
+        flash("This reset link has expired. Please request a new one.", "error")
+        return redirect(url_for("forgot_password"))
+    
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        
+        # Validate passwords match
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return render_template("reset_password.html", token=token)
+        
+        # Validate password strength
+        ok, msg = password_is_strong(password)
+        if not ok:
+            flash(msg, "error")
+            return render_template("reset_password.html", token=token)
+        
+        # Update password
+        password_hash = generate_password_hash(password)
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (password_hash, reset_request["user_id"])
+        )
+        
+        # Mark token as used
+        conn.execute(
+            "UPDATE password_reset_tokens SET used = 1 WHERE token = ?",
+            (token,)
+        )
+        conn.commit()
+        conn.close()
+        
+        flash("Password reset successful! Please log in with your new password.", "success")
+        return redirect(url_for("login"))
+    
+    conn.close()
+    return render_template("reset_password.html", token=token)
+
+
 
 
 if __name__ == "__main__":

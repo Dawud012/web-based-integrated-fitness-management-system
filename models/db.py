@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from werkzeug.security import generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "instance" / "app.db"
@@ -66,7 +67,6 @@ def init_db():
         )
     """)
 
-    # NEW: Quotes table
     conn.execute("""
         CREATE TABLE IF NOT EXISTS quotes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +76,7 @@ def init_db():
         )
     """)
 
-    # Insert default quotes if table is empty
+    # Quotes
     existing = conn.execute("SELECT COUNT(*) as count FROM quotes").fetchone()
     if existing["count"] == 0:
         default_quotes = [
@@ -100,6 +100,46 @@ def init_db():
             "INSERT INTO quotes (quote_text, author) VALUES (?, ?)",
             default_quotes
         )
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            goal_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            target_value REAL,
+            current_value REAL DEFAULT 0,
+            unit TEXT,
+            target_date TEXT,
+            status TEXT DEFAULT 'active',
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Created demo account for supervisor access
+    demo_exists = conn.execute("SELECT id FROM users WHERE email = ?", ("demo@fitness.app",)).fetchone()
+    if not demo_exists:
+        demo_password = generate_password_hash("Demo2026!")
+        conn.execute("""
+            INSERT INTO users (first_name, last_name, email, password_hash)
+            VALUES (?, ?, ?, ?)
+        """, ("Demo", "User", "demo@fitness.app", demo_password))
+
+
+        # Password reset tokens table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            expires_at TEXT NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
 
     conn.commit()
     conn.close()
