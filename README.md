@@ -2,7 +2,7 @@
 Demo Login (For Supervisor/Testing)
 FieldValue
 
-Email: fitness.appPassword
+Email: demo@fitness.app
 Password: Demo2026!
 
  Features
