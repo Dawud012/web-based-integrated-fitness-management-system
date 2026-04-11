@@ -84,12 +84,12 @@
       </div>
 
       <nav class="nav">
-        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
-        <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
-        <a class="nav__link" href="#">Goals</a>
-        <a class="nav__link nav__link--active" href="{{ url_for('quotes') }}">Quotes</a>
-      </nav>
+  <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+  <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
+  <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
+  <a class="nav__link" href="{{ url_for('goals') }}">Goals</a>
+  <a class="nav__link nav__link--active" href="{{ url_for('quotes') }}">Quotes</a>
+</nav>
 
       <div class="topbar__actions">
         <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>

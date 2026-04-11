@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progress Dashboard • Fitness Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 500px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card__icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card__value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-card__label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .stat-card--blue .stat-card__value { color: #60a5fa; }
+    .stat-card--green .stat-card__value { color: #22c55e; }
+    .stat-card--amber .stat-card__value { color: #f59e0b; }
+    .stat-card--purple .stat-card__value { color: #a855f7; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .chart-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+
+    .no-data {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">FW</div>
+        <div class="brand__text">
+          <div class="brand__name">Fitness Web App</div>
+          <div class="brand__tag">Track • Progress • Stay Motivated</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav__link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="nav__link" href="{{ url_for('workouts') }}">Workouts</a>
+        <a class="nav__link" href="{{ url_for('diet') }}">Diet</a>
+        <a class="nav__link" href="{{ url_for('goals') }}">Goals</a>
+        <a class="nav__link" href="{{ url_for('quotes') }}">Quotes</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 22px 0 30px;">
+    <h1 class="hero__title" style="margin:0 0 8px;">Progress Dashboard</h1>
+    <p class="hero__subtitle" style="margin:0 0 20px;">
+      Visualize your fitness journey with charts and statistics.
+    </p>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+      <div class="stat-card stat-card--blue">
+        <div class="stat-card__icon">🏋️</div>
+        <div class="stat-card__value">{{ total_workouts }}</div>
+        <div class="stat-card__label">Total Workouts</div>
+      </div>
+
+      <div class="stat-card stat-card--green">
+        <div class="stat-card__icon">⏱️</div>
+        <div class="stat-card__value">{{ total_minutes }}</div>
+        <div class="stat-card__label">Minutes Exercised</div>
+      </div>
+
+      <div class="stat-card stat-card--amber">
+        <div class="stat-card__icon">🥗</div>
+        <div class="stat-card__value">{{ total_meals }}</div>
+        <div class="stat-card__label">Meals Logged</div>
+      </div>
+
+      <div class="stat-card stat-card--purple">
+        <div class="stat-card__icon">🎯</div>
+        <div class="stat-card__value">{{ completed_goals }}</div>
+        <div class="stat-card__label">Goals Completed</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <!-- Workout Duration Chart -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">📊 Workout Duration (Last 30 Days)</h3>
+        <div class="chart-container">
+          {% if workout_dates|length > 0 %}
+            <canvas id="workoutChart"></canvas>
+          {% else %}
+            <div class="no-data">No workout data yet. Start logging workouts!</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Calories Chart -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">🔥 Daily Calories (Last 30 Days)</h3>
+        <div class="chart-container">
+          {% if diet_dates|length > 0 %}
+            <canvas id="caloriesChart"></canvas>
+          {% else %}
+            <div class="no-data">No diet data yet. Start logging meals!</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Macros Chart -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">🥩 Macronutrients (Last 30 Days)</h3>
+        <div class="chart-container">
+          {% if diet_dates|length > 0 %}
+            <canvas id="macrosChart"></canvas>
+          {% else %}
+            <div class="no-data">No diet data yet. Start logging meals!</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Goals Overview -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">🎯 Goals Overview</h3>
+        <div class="chart-container">
+          {% if active_goals > 0 or completed_goals > 0 %}
+            <canvas id="goalsChart"></canvas>
+          {% else %}
+            <div class="no-data">No goals yet. Create some goals!</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="panel">
+      <h3 class="panel__title">📈 Quick Stats</h3>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: #60a5fa;">{{ total_exercises }}</div>
+          <div class="muted" style="font-size: 13px;">Total Exercises</div>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">{{ avg_calories|int }}</div>
+          <div class="muted" style="font-size: 13px;">Avg Daily Calories</div>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: #22c55e;">{{ active_goals }}</div>
+          <div class="muted" style="font-size: 13px;">Active Goals</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Chart.js default styling for dark theme
+    Chart.defaults.color = '#aab6cf';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+
+    // Workout Duration Chart
+    {% if workout_dates|length > 0 %}
+    new Chart(document.getElementById('workoutChart'), {
+      type: 'bar',
+      data: {
+        labels: {{ workout_dates | tojson }},
+        datasets: [{
+          label: 'Minutes',
+          data: {{ workout_minutes | tojson }},
+          backgroundColor: 'rgba(96, 165, 250, 0.7)',
+          borderColor: 'rgba(96, 165, 250, 1)',
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    // Calories Chart
+    {% if diet_dates|length > 0 %}
+    new Chart(document.getElementById('caloriesChart'), {
+      type: 'line',
+      data: {
+        labels: {{ diet_dates | tojson }},
+        datasets: [{
+          label: 'Calories',
+          data: {{ diet_calories | tojson }},
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#f59e0b',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    // Macros Chart
+    {% if diet_dates|length > 0 %}
+    new Chart(document.getElementById('macrosChart'), {
+      type: 'line',
+      data: {
+        labels: {{ diet_dates | tojson }},
+        datasets: [
+          {
+            label: 'Protein',
+            data: {{ diet_protein | tojson }},
+            borderColor: '#22c55e',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 3
+          },
+          {
+            label: 'Carbs',
+            data: {{ diet_carbs | tojson }},
+            borderColor: '#60a5fa',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 3
+          },
+          {
+            label: 'Fat',
+            data: {{ diet_fat | tojson }},
+            borderColor: '#a855f7',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, padding: 15 }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    // Goals Doughnut Chart
+    {% if active_goals > 0 or completed_goals > 0 %}
+    new Chart(document.getElementById('goalsChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Active', 'Completed'],
+        datasets: [{
+          data: [{{ active_goals }}, {{ completed_goals }}],
+          backgroundColor: ['#60a5fa', '#22c55e'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, padding: 15 }
+          }
+        },
+        cutout: '60%'
+      }
+    });
+    {% endif %}
+  </script>
+
+</body>
+</html>

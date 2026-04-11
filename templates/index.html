@@ -93,36 +93,40 @@
         <a class="btn btn--small" href="{{ url_for('goals') }}">Open</a>
       </article>
 
-      <article class="card">
-        <div class="card__icon">📈</div>
-        <h2 class="card__title">Progress Dashboard</h2>
-        <p class="card__desc">Visualise trends with charts (coming soon).</p>
-        <button class="btn btn--small">Open</button>
-      </article>
+     <article class="card">
+  <div class="card__icon">📈</div>
+  <h2 class="card__title">Progress Dashboard</h2>
+  <p class="card__desc">Visualise trends with charts.</p>
+  <a class="btn btn--small" href="{{ url_for('progress') }}">Open</a>
+</article>
     </section>
 
     <!-- Activity & Quick Add -->
-    <section class="split">
-      <div class="panel">
-        <h3 class="panel__title">Recent Activity</h3>
-        <ul class="list">
+    <!-- Activity & Quick Add -->
+<section class="split">
+  <div class="panel">
+    <h3 class="panel__title">Recent Activity</h3>
+    
+    {% if recent_activity %}
+      <ul class="list">
+        {% for item in recent_activity %}
           <li class="list__item">
-            <span class="pill pill--blue">Workout</span>
-            <span>Full body session (placeholder)</span>
-            <span class="muted">Today</span>
+            {% if item.type == 'workout' %}
+              <span class="pill pill--blue">Workout</span>
+            {% elif item.type == 'diet' %}
+              <span class="pill pill--green">Diet</span>
+            {% else %}
+              <span class="pill pill--amber">Goal</span>
+            {% endif %}
+            <span>{{ item.name }}</span>
+            <span class="muted">{{ item.activity_date }}</span>
           </li>
-          <li class="list__item">
-            <span class="pill pill--green">Diet</span>
-            <span>Logged breakfast (placeholder)</span>
-            <span class="muted">Yesterday</span>
-          </li>
-          <li class="list__item">
-            <span class="pill pill--amber">Goal</span>
-            <span>New goal created (placeholder)</span>
-            <span class="muted">This week</span>
-          </li>
-        </ul>
-      </div>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No activity yet. Start logging workouts, meals, or goals!</p>
+    {% endif %}
+  </div>
 
       <div class="panel">
         <h3 class="panel__title">Quick Add</h3>

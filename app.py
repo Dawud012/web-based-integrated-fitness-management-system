@@ -150,20 +150,59 @@ def dashboard():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    # Get a random quote for the dashboard
+    user_id = session["user_id"]
     conn = get_db()
-    quotes_list = conn.execute("SELECT * FROM quotes").fetchall()
-    conn.close()
     
+    # Get daily quote
+    quotes_list = conn.execute("SELECT * FROM quotes").fetchall()
     daily_quote = None
     if quotes_list:
-        # Use today's date as seed for consistent daily quote
         today_seed = int(date.today().strftime("%Y%m%d"))
         random.seed(today_seed)
         daily_quote = random.choice(quotes_list)
-        random.seed()  # Reset seed
+        random.seed()
     
-    return render_template("index.html", daily_quote=daily_quote)
+    # Get recent activity (last 10 items)
+    recent_workouts = conn.execute("""
+        SELECT 'workout' as type, title as name, workout_date as activity_date
+        FROM workout_sessions
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (user_id,)).fetchall()
+    
+    recent_meals = conn.execute("""
+        SELECT 'diet' as type, food_name as name, entry_date as activity_date
+        FROM diet_entries
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (user_id,)).fetchall()
+    
+    recent_goals = conn.execute("""
+        SELECT 'goal' as type, title as name, created_at as activity_date
+        FROM goals
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (user_id,)).fetchall()
+    
+    conn.close()
+    
+    # Combine and sort by date
+    all_activity = list(recent_workouts) + list(recent_meals) + list(recent_goals)
+    
+    # Sort by activity_date descending (most recent first)
+    all_activity.sort(key=lambda x: x["activity_date"], reverse=True)
+    
+    # Take only the 5 most recent
+    recent_activity = all_activity[:5]
+    
+    return render_template(
+        "index.html",
+        daily_quote=daily_quote,
+        recent_activity=recent_activity
+    )
 
 
 # =========================
@@ -649,7 +688,8 @@ def delete_quote(quote_id):
     flash("Quote deleted.", "success")
     return redirect(url_for("quotes"))
 
-    # =========================
+
+# =========================
 # Goals
 # =========================
 
@@ -965,6 +1005,123 @@ def reset_password_token(token):
     return render_template("reset_password.html", token=token)
 
 
+# =========================
+# Progress Dashboard
+# =========================
+
+@app.route("/progress")
+def progress():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    conn = get_db()
+    
+    # Get workout stats (last 30 days)
+    workout_stats = conn.execute("""
+        SELECT 
+            ws.workout_date,
+            COUNT(DISTINCT ws.id) as workout_count,
+            COALESCE(SUM(we.duration_minutes), 0) as total_minutes,
+            COUNT(we.id) as exercise_count
+        FROM workout_sessions ws
+        LEFT JOIN workout_exercises we ON we.session_id = ws.id
+        WHERE ws.user_id = ?
+        AND ws.workout_date >= date('now', '-30 days')
+        GROUP BY ws.workout_date
+        ORDER BY ws.workout_date ASC
+    """, (user_id,)).fetchall()
+    
+    # Get diet stats (last 30 days)
+    diet_stats = conn.execute("""
+        SELECT 
+            entry_date,
+            ROUND(SUM(calories), 1) as total_calories,
+            ROUND(SUM(protein), 1) as total_protein,
+            ROUND(SUM(carbs), 1) as total_carbs,
+            ROUND(SUM(fat), 1) as total_fat
+        FROM diet_entries
+        WHERE user_id = ?
+        AND entry_date >= date('now', '-30 days')
+        GROUP BY entry_date
+        ORDER BY entry_date ASC
+    """, (user_id,)).fetchall()
+    
+    # Get totals for summary cards
+    total_workouts = conn.execute("""
+        SELECT COUNT(*) as count FROM workout_sessions WHERE user_id = ?
+    """, (user_id,)).fetchone()["count"]
+    
+    total_exercises = conn.execute("""
+        SELECT COUNT(*) as count 
+        FROM workout_exercises we
+        JOIN workout_sessions ws ON ws.id = we.session_id
+        WHERE ws.user_id = ?
+    """, (user_id,)).fetchone()["count"]
+    
+    total_minutes = conn.execute("""
+        SELECT COALESCE(SUM(we.duration_minutes), 0) as total
+        FROM workout_exercises we
+        JOIN workout_sessions ws ON ws.id = we.session_id
+        WHERE ws.user_id = ?
+    """, (user_id,)).fetchone()["total"]
+    
+    total_meals = conn.execute("""
+        SELECT COUNT(*) as count FROM diet_entries WHERE user_id = ?
+    """, (user_id,)).fetchone()["count"]
+    
+    avg_calories = conn.execute("""
+        SELECT ROUND(AVG(daily_cal), 0) as avg
+        FROM (
+            SELECT SUM(calories) as daily_cal
+            FROM diet_entries
+            WHERE user_id = ?
+            GROUP BY entry_date
+        )
+    """, (user_id,)).fetchone()["avg"] or 0
+    
+    # Goals stats
+    active_goals = conn.execute("""
+        SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND status = 'active'
+    """, (user_id,)).fetchone()["count"]
+    
+    completed_goals = conn.execute("""
+        SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND status = 'completed'
+    """, (user_id,)).fetchone()["count"]
+    
+    conn.close()
+    
+    # Convert to lists for JSON in template
+    workout_dates = [row["workout_date"] for row in workout_stats]
+    workout_minutes = [row["total_minutes"] for row in workout_stats]
+    workout_exercises = [row["exercise_count"] for row in workout_stats]
+    
+    diet_dates = [row["entry_date"] for row in diet_stats]
+    diet_calories = [row["total_calories"] or 0 for row in diet_stats]
+    diet_protein = [row["total_protein"] or 0 for row in diet_stats]
+    diet_carbs = [row["total_carbs"] or 0 for row in diet_stats]
+    diet_fat = [row["total_fat"] or 0 for row in diet_stats]
+    
+    return render_template(
+        "progress.html",
+        # Summary stats
+        total_workouts=total_workouts,
+        total_exercises=total_exercises,
+        total_minutes=total_minutes,
+        total_meals=total_meals,
+        avg_calories=avg_calories,
+        active_goals=active_goals,
+        completed_goals=completed_goals,
+        # Chart data
+        workout_dates=workout_dates,
+        workout_minutes=workout_minutes,
+        workout_exercises=workout_exercises,
+        diet_dates=diet_dates,
+        diet_calories=diet_calories,
+        diet_protein=diet_protein,
+        diet_carbs=diet_carbs,
+        diet_fat=diet_fat
+    )
 
 
 if __name__ == "__main__":
