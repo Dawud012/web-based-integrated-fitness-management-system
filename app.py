@@ -11,7 +11,7 @@ import secrets
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
-
+import anthropic
 
 
 def password_is_strong(pw: str):
@@ -1123,6 +1123,70 @@ def progress():
         diet_fat=diet_fat
     )
 
+# =========================
+# AI Fitness Coach
+# =========================
 
+@app.route("/ai-coach", methods=["GET", "POST"])
+def ai_coach():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    
+    response_text = None
+    user_message = ""
+    
+    if request.method == "POST":
+        user_message = request.form.get("message", "").strip()
+        
+        if user_message:
+            try:
+                client = anthropic.Anthropic(
+                    api_key=os.getenv("ANTHROPIC_API_KEY")
+                )
+                
+                # Get user's goals for context
+                user_id = session["user_id"]
+                conn = get_db()
+                goals = conn.execute(
+                    "SELECT title, goal_type FROM goals WHERE user_id = ? AND status = 'active'",
+                    (user_id,)
+                ).fetchall()
+                conn.close()
+                
+                goals_context = ""
+                if goals:
+                    goals_list = [f"{g['goal_type']}: {g['title']}" for g in goals]
+                    goals_context = f"The user's current fitness goals are: {', '.join(goals_list)}."
+                
+                system_prompt = f"""You are a helpful AI fitness coach inside a fitness tracking web app. 
+You provide advice on workouts, nutrition, and motivation.
+Keep responses concise and actionable (under 300 words).
+Be encouraging and supportive.
+{goals_context}
+
+When creating workout plans:
+- Follow the user's exact request for muscle groups and frequency
+- Format clearly with days, exercises, sets, and reps
+- Use bullet points for exercises
+
+If asked about nutrition, give practical advice.
+Do not provide medical advice - recommend consulting a doctor for health concerns."""
+                
+                message = client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=1024,
+                    system=system_prompt,
+                    messages=[
+                        {"role": "user", "content": user_message}
+                    ]
+                )
+                
+                response_text = message.content[0].text
+                
+            except Exception as e:
+                print(f"AI Error: {e}")
+                response_text = "Sorry, I couldn't process your request. Please try again."
+    
+    return render_template("ai_coach.html", response=response_text, user_message=user_message)
 if __name__ == "__main__":
     app.run(debug=True)
