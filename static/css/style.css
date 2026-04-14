@@ -464,3 +464,72 @@ a{ color: inherit; text-decoration:none; }
   color: var(--muted);
   font-size: 13px;
 }
+.disclaimer {
+    font-size: 0.85rem;
+    color: #888;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+/* =========
+   Mobile Responsive Fixes
+========= */
+@media (max-width: 768px) {
+  /* Stack the topbar vertically */
+  .topbar__inner {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  /* Center the brand */
+  .brand {
+    min-width: auto;
+    justify-content: center;
+  }
+
+  /* Make nav wrap nicely */
+  .nav {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .nav__link {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  /* Center the actions (Log Out button) */
+  .topbar__actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Hero section */
+  .hero {
+    padding: 20px 0 14px;
+    text-align: center;
+  }
+
+  .hero__cta {
+    justify-content: center;
+  }
+
+  /* Auth card padding */
+  .auth__card {
+    padding: 18px;
+    margin: 0 10px;
+  }
+
+  /* Panels */
+  .panel {
+    padding: 14px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 14px;
+  }
+}
