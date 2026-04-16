@@ -28,8 +28,7 @@ def password_is_strong(pw: str):
     return True, ""
 
 
-app = Flask(__name__)
-app.secret_key = "dev-key-change-later"  # later move to .env
+app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
 
 # Email configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
