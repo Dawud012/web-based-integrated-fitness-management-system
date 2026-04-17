@@ -537,9 +537,14 @@ a{ color: inherit; text-decoration:none; }
         width: 100% !important;
     }
     
-    label.field {
-        display: block !important;
-        width: calc(100% - 32px) !important;
+    .field {
+        width: 100% !important;
+    }
+    
+    .field .input,
+    .input {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     
     .topbar__inner {
