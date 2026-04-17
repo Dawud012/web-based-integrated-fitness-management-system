@@ -27,7 +27,7 @@ def password_is_strong(pw: str):
         return False, "Password must include at least 1 special character."
     return True, ""
 
-
+app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
 
 # Email configuration
@@ -87,7 +87,7 @@ def register():
             flash("Email already registered. Please log in.", "error")
             return render_template("register.html", form=form_data)
 
-        # 4) Create user
+        # Hash password and create user
         password_hash = generate_password_hash(password)
         conn.execute(
             "INSERT INTO users (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)",

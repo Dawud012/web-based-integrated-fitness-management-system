@@ -1,3 +1,6 @@
+
+<!-- Diet History page - displays logged meals grouped by date with daily macro totals -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,8 +8,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Diet History • Fitness Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Page-specific styles for diet history cards and macro pills -->
   <style>
-    /* Extra styles for diet history */
+  
     .day-card {
       background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
       border: 1px solid rgba(255,255,255,.08);
@@ -148,7 +153,7 @@
   </style>
 </head>
 <body>
-
+<!-- Navigation bar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -193,12 +198,13 @@
       {% endif %}
     {% endwith %}
 
-    <!-- Navigation buttons -->
+    <!-- Action buttons - add new entry and refresh -->
     <div style="display:flex; gap:10px; margin-bottom:18px;">
       <a class="btn btn--primary" href="{{ url_for('diet') }}">+ Add Entry</a>
       <a class="btn btn--ghost" href="{{ url_for('diet_history') }}">Refresh</a>
     </div>
 
+    <!-- Check if user has any diet entries -->
     {% if daily_totals|length == 0 %}
       <div class="panel">
         <p class="muted" style="margin:0;">No diet entries yet. Start logging your meals!</p>
@@ -232,7 +238,7 @@
       {% endif %}
 
       <h3 style="margin:0 0 12px; font-size:14px; color:var(--muted);">ALL DAYS</h3>
-
+<!-- Loop through each day's entries - clickable to expand/collapse -->
       {% for day in daily_totals %}
         <div class="day-card">
           <div class="day-header" onclick="toggleDay('{{ day['entry_date'] }}')">
@@ -277,7 +283,7 @@
     {% endif %}
 
   </main>
-
+<!-- JavaScript: Toggle expand/collapse for each day's entries -->
   <script>
     function toggleDay(date) {
       const entries = document.getElementById('entries-' + date);

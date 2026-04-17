@@ -1,3 +1,5 @@
+<!-- AI Fitness Coach page - integrates with Anthropic Claude API to provide personalised fitness advice -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Fitness Coach • Fitness Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Page-specific styles for the chat interface -->
   <style>
     .chat-container {
       max-width: 800px;
@@ -82,7 +85,7 @@
   </style>
 </head>
 <body>
-
+<!-- Navigation bar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -116,6 +119,7 @@
       </p>
 
       <!-- AI Response -->
+       <!-- Show user's question and AI response after form submission -->
       {% if response %}
         <div class="user-message">
           <strong>You asked:</strong> {{ user_message }}
@@ -129,7 +133,8 @@
         </div>
       {% endif %}
 
-      <!-- Suggestions -->
+     
+      <!-- Suggestion buttons - only shown before user submits a question -->
       {% if not response %}
         <p class="muted" style="margin-bottom: 12px;">Try asking:</p>
         <div class="suggestions">
@@ -151,7 +156,7 @@
         </div>
       {% endif %}
 
-      <!-- Input Form -->
+       <!-- Question input form - submits to ai_coach route via POST -->
       <section class="panel">
         <h3 class="panel__title">Ask a question</h3>
 
@@ -180,7 +185,7 @@
       </div>
     </div>
   </main>
-
+<!-- Fills the textarea when a suggestion button is clicked -->
   <script>
     function fillSuggestion(text) {
       document.getElementById('messageInput').value = text;

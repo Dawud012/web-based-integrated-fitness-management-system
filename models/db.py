@@ -1,19 +1,21 @@
+# Database module - handles SQLite connection and table creation
+
 import sqlite3
 from pathlib import Path
 from werkzeug.security import generate_password_hash
-
+# Database file path configuration
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "instance" / "app.db"
-
+# Creates and returns a database connection
 def get_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
+# Initialises all database tables and default data
 def init_db():
     conn = get_db()
-
+# Users table - stores account info and hashed passwords
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +26,7 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+# Workout sessions table - parent table for workouts
     conn.execute("""
         CREATE TABLE IF NOT EXISTS workout_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +38,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
-
+# Workout exercises table - child table linked to sessions
     conn.execute("""
         CREATE TABLE IF NOT EXISTS workout_exercises (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,7 +52,7 @@ def init_db():
             FOREIGN KEY (session_id) REFERENCES workout_sessions(id)
         )
     """)
-
+# Diet entries table - stores meals with macros from USDA API
     conn.execute("""
         CREATE TABLE IF NOT EXISTS diet_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,7 +68,7 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
-
+# Quotes table - motivational quotes (shared globally, no user_id)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS quotes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +78,7 @@ def init_db():
         )
     """)
 
-    # Quotes
+    # Insert default quotes if table is empty
     existing = conn.execute("SELECT COUNT(*) as count FROM quotes").fetchone()
     if existing["count"] == 0:
         default_quotes = [
@@ -100,7 +102,7 @@ def init_db():
             "INSERT INTO quotes (quote_text, author) VALUES (?, ?)",
             default_quotes
         )
-
+# Goals table - tracks user fitness goals with progress
     conn.execute("""
         CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

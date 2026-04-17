@@ -1,3 +1,5 @@
+<!-- Goals page - create, track progress, complete and manage fitness goals -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Goals • Fitness Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Page-specific styles for goal cards and progress bars -->
   <style>
     .goal-card {
       background: linear-gradient(180deg, rgba(16,24,38,.9), rgba(14,21,35,.85));
@@ -120,7 +124,7 @@
   </style>
 </head>
 <body>
-
+<!-- Navigation bar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -151,7 +155,7 @@
       Set targets and track your progress towards a healthier you.
     </p>
 
-    <!-- Flash messages -->
+ <!-- Flash messages for success/error notifications -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
@@ -165,7 +169,7 @@
       {% endif %}
     {% endwith %}
 
-    <!-- Add New Goal -->
+    <!-- Create new goal form - supports different goal types -->
     <section class="panel" style="margin-bottom: 20px;">
       <h3 class="panel__title">Create a new goal</h3>
 
@@ -214,7 +218,7 @@
       </form>
     </section>
 
-    <!-- Active Goals -->
+    <!-- Active goals list with progress tracking -->
     <section>
       <h3 style="margin:0 0 14px;">🎯 Active Goals ({{ active_goals|length }})</h3>
 
@@ -238,6 +242,7 @@
               <span class="goal-type goal-type--{{ goal['goal_type'] }}">{{ goal['goal_type'] }}</span>
             </div>
 
+<!-- Calculate and display progress percentage -->
             {% if goal['target_value'] %}
               {% set progress = (goal['current_value'] / goal['target_value'] * 100) if goal['target_value'] > 0 else 0 %}
               {% set progress = progress if progress <= 100 else 100 %}
@@ -251,6 +256,7 @@
               </div>
             {% endif %}
 
+            <!-- Goal actions: update progress, mark complete, delete -->
             <div class="goal-actions">
               {% if goal['target_value'] %}
                 <form class="update-form" method="post" action="{{ url_for('update_goal_progress', goal_id=goal['id']) }}">
@@ -273,7 +279,7 @@
       {% endif %}
     </section>
 
-    <!-- Completed Goals -->
+    <!-- Completed goals section - can reactivate or delete -->
     {% if completed_goals|length > 0 %}
       <section class="completed-section">
         <h3 style="margin:0 0 14px;">✅ Completed Goals ({{ completed_goals|length }})</h3>

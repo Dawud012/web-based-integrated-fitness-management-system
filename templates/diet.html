@@ -1,3 +1,5 @@
+<!-- Diet Tracker page - search USDA database for foods and log meals with auto-calculated macros -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
+<!-- Navigation bar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -38,7 +40,7 @@
       Search foods (USDA database) and auto-fill calories/macros.
     </p>
 
-    <!-- Flash messages -->
+<!-- Flash messages for success/error notifications -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
@@ -57,7 +59,7 @@
       <a class="btn btn--ghost" href="{{ url_for('diet_history') }}">📋 View History</a>
     </div>
 
-    <!-- Search -->
+    <!-- Food search panel - queries USDA API as user types -->
     <section class="panel" style="margin-bottom: 14px;">
       <h3 class="panel__title">Search food</h3>
 
@@ -73,7 +75,7 @@
       </p>
     </section>
 
-    <!-- Add Entry -->
+  <!-- Add entry form - macros auto-fill from selected food -->
     <section class="panel">
       <h3 class="panel__title">Add entry</h3>
 
@@ -131,7 +133,7 @@
       </form>
     </section>
   </main>
-
+<!-- JavaScript: USDA API search with debouncing and macro calculation -->
 <script>
   const foodQuery = document.getElementById("foodQuery");
   const resultsEl = document.getElementById("results");
@@ -152,14 +154,14 @@
     entryDate.value = today;
   }
 
-  let basePer100 = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  let basePer100 = { calories: 0, protein: 0, carbs: 0, fat: 0 }; // Stores nutrition values per 100g for the selected food
 
   function round1(x) {
     if (x === null || x === undefined || isNaN(x)) return "";
     return Math.round(x * 10) / 10;
   }
 
-  function safeNum(x) {
+  function safeNum(x) {             // Recalculates macros when user changes grams
     const n = Number(x);
     return Number.isFinite(n) ? n : 0;
   }
@@ -178,7 +180,7 @@
 
   let timer = null;
 
-  foodQuery.addEventListener("input", () => {
+  foodQuery.addEventListener("input", () => {          // Debounced search - waits 350ms after typing stops before calling API
     clearTimeout(timer);
     const q = foodQuery.value.trim();
 

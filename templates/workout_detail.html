@@ -1,3 +1,5 @@
+<!-- Workout Detail page - view single workout session and manage exercises -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
+<!-- Navigation bar -->
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
@@ -36,7 +38,7 @@
       {{ workout["workout_date"] }}
       {% if workout["notes"] %} • {{ workout["notes"] }}{% endif %}
     </p>
-
+<!-- Flash messages - shows success/error notifications -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -46,7 +48,7 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
-
+<!-- Add exercise form - adds to current workout session -->
     <section class="panel" style="margin-bottom: 14px;">
       <h3 class="panel__title">Add an exercise</h3>
 
@@ -81,7 +83,7 @@
         <button class="btn btn--primary btn--full" type="submit">Add Exercise</button>
       </form>
     </section>
-
+<!-- Exercises list - displays all exercises in this workout -->
     <section class="panel">
       <h3 class="panel__title">Exercises</h3>
 
@@ -98,7 +100,7 @@
                   {% if ex["notes"] %} • {{ ex["notes"] }}{% endif %}
                 </div>
               </div>
-
+<!-- Delete exercise with confirmation -->
               <form method="post" action="{{ url_for('delete_exercise', session_id=workout['id'], exercise_id=ex['id']) }}"
                     onsubmit="return confirm('Delete this exercise?');">
                 <button class="btn btn--small" type="submit">Delete</button>

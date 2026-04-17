@@ -1,3 +1,5 @@
+<!-- Register page - new user account creation with password validation -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +8,7 @@
   <title>Register • Fitness Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
+<!-- JavaScript: Toggle password visibility -->
 <script>
   function togglePassword() {
     const passwordInput = document.getElementById("password");
@@ -23,7 +25,7 @@
 </script>
 
 <body class="auth-page">
-
+<!-- Auth card layout - centered on page -->
   <main class="container auth">
     <section class="auth__card">
 
@@ -40,7 +42,7 @@
       <p class="auth__subtitle">
         Start tracking your fitness and building healthy habits.
       </p>
-
+<!-- Flash messages - shows validation errors -->
       {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div style="margin-bottom:12px;">
@@ -52,7 +54,7 @@
     </div>
   {% endif %}
 {% endwith %}
-
+<!-- Registration form - preserves input on validation error -->
       <form class="form" method="post">
 
         <label class="field">
@@ -69,7 +71,7 @@
           <span class="field__label">Email</span>
           <input class="input" type="email" name="email" placeholder="you@example.com" value="{{ form.get('email','') }}" required>
         </label>
-
+<!-- Password field with show/hide toggle -->
         <label class="field">
   <span class="field__label">Password</span>
 

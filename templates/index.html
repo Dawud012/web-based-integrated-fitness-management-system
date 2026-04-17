@@ -1,3 +1,5 @@
+<!-- Dashboard page (index.html) - main hub after login showing overview of all features -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +44,7 @@
   <!-- Main Content -->
   <main class="container">
 
-    <!-- Hero Section -->
+    <!-- Hero section with welcome message and daily quote -->
     <section class="hero">
       <div class="hero__left">
         <h1 class="hero__title">Your all-in-one fitness dashboard</h1>
@@ -59,6 +61,7 @@
       <div class="hero__right">
         <div class="quote-card">
           <div class="quote-card__label">Daily Quote</div>
+          <!-- Daily quote - randomly selected, stays same all day using date-based seed -->
           {% if daily_quote %}
             <p class="quote-card__text">"{{ daily_quote['quote_text'] }}"</p>
             <div class="quote-card__meta">— {{ daily_quote['author'] or 'Unknown' }}</div>
@@ -70,7 +73,7 @@
       </div>
     </section>
 
-    <!-- Dashboard Cards -->
+    <!-- Feature cards - quick access to all app pages -->
     <section class="grid">
       <article class="card">
         <div class="card__icon">🏋️</div>
@@ -108,12 +111,11 @@
 </article>
     </section>
 
-    <!-- Activity & Quick Add -->
-    <!-- Activity & Quick Add -->
+  <!-- Recent activity feed and quick add buttons -->
 <section class="split">
   <div class="panel">
     <h3 class="panel__title">Recent Activity</h3>
-    
+    <!-- Recent activity - combines last 5 workouts, meals, and goals -->
     {% if recent_activity %}
       <ul class="list">
         {% for item in recent_activity %}
@@ -134,7 +136,7 @@
       <p class="muted">No activity yet. Start logging workouts, meals, or goals!</p>
     {% endif %}
   </div>
-
+<!-- Quick add buttons for fast navigation -->
       <div class="panel">
         <h3 class="panel__title">Quick Add</h3>
         <div class="quick">
