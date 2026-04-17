@@ -537,14 +537,11 @@ a{ color: inherit; text-decoration:none; }
         width: 100% !important;
     }
     
-    .field {
+    input[type="date"] {
         width: 100% !important;
-    }
-    
-    .field .input,
-    .input {
-        width: 100% !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
+        -webkit-appearance: none !important;
     }
     
     .topbar__inner {
