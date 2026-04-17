@@ -537,6 +537,11 @@ a{ color: inherit; text-decoration:none; }
         width: 100% !important;
     }
     
+    label.field {
+        display: block !important;
+        width: calc(100% - 32px) !important;
+    }
+    
     .topbar__inner {
         flex-direction: column;
         gap: 10px;
