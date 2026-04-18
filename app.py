@@ -413,9 +413,10 @@ def delete_exercise(session_id, exercise_id):
     return redirect(url_for("workout_detail", session_id=session_id))
 
 
-# =========================
+
+
 # Diet Tracker
-# =========================
+
 
 USDA_API_KEY = os.getenv("USDA_API_KEY", "")
 
@@ -688,9 +689,9 @@ def delete_quote(quote_id):
     return redirect(url_for("quotes"))
 
 
-# =========================
+
 # Goals
-# =========================
+
 
 @app.route("/goals")
 def goals():
