@@ -204,9 +204,9 @@ def dashboard():
     )
 
 
-# =========================
+
 # Workouts (Sessions + Exercises)
-# =========================
+
 
 @app.route("/workouts", methods=["GET", "POST"])
 def workouts():
@@ -635,9 +635,9 @@ def delete_diet_entry(entry_id):
     return redirect(url_for("diet_history"))
 
 
-# =========================
+
 # Quotes
-# =========================
+
 
 @app.route("/quotes")
 def quotes():
@@ -864,9 +864,9 @@ def delete_goal(goal_id):
     return redirect(url_for("goals"))
 
 
-# =========================
+
 # Forgot Password (Email-based)
-# =========================
+
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
@@ -1005,9 +1005,9 @@ def reset_password_token(token):
     return render_template("reset_password.html", token=token)
 
 
-# =========================
+
 # Progress Dashboard
-# =========================
+
 
 @app.route("/progress")
 def progress():
@@ -1123,9 +1123,9 @@ def progress():
         diet_fat=diet_fat
     )
 
-# =========================
+
 # AI Fitness Coach
-# =========================
+
 
 @app.route("/ai-coach", methods=["GET", "POST"])
 def ai_coach():

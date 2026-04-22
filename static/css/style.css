@@ -561,3 +561,7 @@ a{ color: inherit; text-decoration:none; }
         padding: 6px 10px;
     }
 }
+
+.card__desc {
+    min-height: 48px;
+}
